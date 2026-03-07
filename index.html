@@ -948,35 +948,62 @@ function avaHtml(photo,name,size=52,style=''){
 }
 
 // ===== AUTH STATE =====
-onAuthStateChanged(auth,async user=>{
-  if(isAdmin) return;
-  if(user){
-    // Check if profile exists
+let authReady=false;
+
+async function handleUser(user){
+  if(!user){
+    authReady=true;
+    show('login');
+    document.getElementById('step0').style.display='block';
+    document.getElementById('step1').classList.remove('active');
+    return;
+  }
+  // Show splash while loading
+  show('splash');
+  document.querySelector('.splash-name').innerHTML='Nex<em style="color:#3FB950">Chat</em>';
+  try{
     const snap=await get(ref(db,`users/${user.uid}`));
     if(snap.exists()){
       const data=snap.val();
-      me={id:user.uid,name:data.name||user.displayName,username:data.username,photo:data.photo||user.photoURL||'',email:user.email};
-      show('home');
+      me={id:user.uid,name:data.name||user.displayName||'User',username:data.username||'',photo:data.photo||user.photoURL||'',email:user.email||''};
       setupPresence();
       startHomeListeners();
       renderMyTopbar();
+      show('home');
+      if(!authReady) toast('Selamat datang kembali, '+me.name.split(' ')[0]+'! 👋','ok');
     } else {
-      // New user — show setup
-      me={id:user.uid,name:user.displayName||'',photo:user.photoURL||'',email:user.email};
-      // Pre-fill photo from Google
+      // New user — setup profile
+      me={id:user.uid,name:user.displayName||'',photo:user.photoURL||'',email:user.email||''};
       if(me.photo){
         const pp=document.getElementById('photoPreview');
-        pp.innerHTML=`<img src="${me.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror=""><div class="overlay">✏️</div>`;
+        if(pp) pp.innerHTML=`<img src="${me.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"><div class="overlay">✏️</div>`;
       }
       show('login');
       document.getElementById('step0').style.display='none';
       document.getElementById('step1').classList.add('active');
     }
-  } else {
+  }catch(e){
     show('login');
     document.getElementById('step0').style.display='block';
-    document.getElementById('step1').classList.remove('active');
   }
+  authReady=true;
+}
+
+// Handle redirect result FIRST (before onAuthStateChanged fires)
+getRedirectResult(auth).then(result=>{
+  // result handled by onAuthStateChanged
+}).catch(err=>{
+  if(err.code&&err.code!=='auth/null-user'&&err.code!=='auth/no-current-user'){
+    authReady=true;
+    show('login');
+    document.getElementById('step0').style.display='block';
+    toast('Login gagal: '+err.message,'err');
+  }
+});
+
+onAuthStateChanged(auth,user=>{
+  if(isAdmin)return;
+  handleUser(user);
 });
 
 // ===== GOOGLE LOGIN =====
@@ -984,26 +1011,17 @@ window.loginGoogle=async()=>{
   try{
     const btn=document.getElementById('btnGoogle');
     btn.disabled=true;
-    btn.innerHTML='<div style="width:20px;height:20px;border:2.5px solid #ccc;border-top-color:#333;border-radius:50%;animation:spin .7s linear infinite;"></div> Mengarahkan...';
-    // Gunakan redirect — lebih cocok untuk HP
+    btn.innerHTML='<div style="display:flex;align-items:center;gap:10px;justify-content:center;"><div style="width:20px;height:20px;border:2.5px solid #ccc;border-top-color:#333;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div> Mengarahkan ke Google...</div>';
     await signInWithRedirect(auth,gProvider);
   }catch(err){
     const btn=document.getElementById('btnGoogle');
-    if(btn){ btn.disabled=false; btn.innerHTML='<svg class="g-icon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Masuk dengan Google'; }
+    if(btn){
+      btn.disabled=false;
+      btn.innerHTML='<svg class="g-icon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Masuk dengan Google';
+    }
     toast('Gagal: '+err.message,'err');
   }
 };
-
-// Handle redirect result setelah kembali dari Google
-getRedirectResult(auth).then(result=>{
-  if(result?.user){
-    // Auth state listener akan menangani sisanya
-  }
-}).catch(err=>{
-  if(err.code&&err.code!=='auth/null-user'){
-    toast('Login gagal: '+err.message,'err');
-  }
-});
 
 // ===== PHOTO PICK =====
 window.handlePhoto=(e)=>{
@@ -1540,11 +1558,15 @@ window.monitorConv=(cid,a,b)=>{
 window.closeMon=()=>document.getElementById('monView').classList.remove('open');
 
 // ===== INIT =====
+// Splash disembunyikan oleh auth handler
+// Fallback jika auth tidak merespons dalam 8 detik
 setTimeout(()=>{
-  const splashEl=document.getElementById('splash');
-  splashEl.style.opacity='0';splashEl.style.transition='opacity .4s';
-  setTimeout(()=>splashEl.classList.add('off'),400);
-},1800);
+  if(!authReady&&!isAdmin){
+    authReady=true;
+    show('login');
+    document.getElementById('step0').style.display='block';
+  }
+},8000);
 </script>
 </body>
 </html>
