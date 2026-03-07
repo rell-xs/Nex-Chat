@@ -876,7 +876,8 @@ import {
   serverTimestamp,query,orderByChild,get,off,onDisconnect,update
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import {
-  getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,signOut,onAuthStateChanged
+  getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,
+  signOut,onAuthStateChanged,browserLocalPersistence,setPersistence
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   getStorage,ref as sRef,uploadString,getDownloadURL
@@ -949,18 +950,24 @@ function avaHtml(photo,name,size=52,style=''){
 
 // ===== AUTH STATE =====
 let authReady=false;
+let authHandled=false;
+
+// Set persistence ke LOCAL supaya sesi tersimpan permanen
+setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
 async function handleUser(user){
+  if(authHandled) return;
+  authHandled=true;
+  authReady=true;
+
   if(!user){
-    authReady=true;
     show('login');
     document.getElementById('step0').style.display='block';
     document.getElementById('step1').classList.remove('active');
     return;
   }
-  // Show splash while loading
+
   show('splash');
-  document.querySelector('.splash-name').innerHTML='Nex<em style="color:#3FB950">Chat</em>';
   try{
     const snap=await get(ref(db,`users/${user.uid}`));
     if(snap.exists()){
@@ -970,9 +977,7 @@ async function handleUser(user){
       startHomeListeners();
       renderMyTopbar();
       show('home');
-      if(!authReady) toast('Selamat datang kembali, '+me.name.split(' ')[0]+'! 👋','ok');
     } else {
-      // New user — setup profile
       me={id:user.uid,name:user.displayName||'',photo:user.photoURL||'',email:user.email||''};
       if(me.photo){
         const pp=document.getElementById('photoPreview');
@@ -986,24 +991,26 @@ async function handleUser(user){
     show('login');
     document.getElementById('step0').style.display='block';
   }
-  authReady=true;
 }
 
-// Handle redirect result FIRST (before onAuthStateChanged fires)
+// Cek redirect result dulu
 getRedirectResult(auth).then(result=>{
-  // result handled by onAuthStateChanged
+  if(result && result.user){
+    handleUser(result.user);
+  }
 }).catch(err=>{
-  if(err.code&&err.code!=='auth/null-user'&&err.code!=='auth/no-current-user'){
-    authReady=true;
+  if(err.code && err.code!=='auth/null-user' && err.code!=='auth/no-current-user'){
+    authHandled=true; authReady=true;
     show('login');
     document.getElementById('step0').style.display='block';
-    toast('Login gagal: '+err.message,'err');
+    toast('Login gagal, coba lagi','err');
   }
 });
 
-onAuthStateChanged(auth,user=>{
-  if(isAdmin)return;
-  handleUser(user);
+// Auth state change (untuk sesi yang sudah tersimpan)
+onAuthStateChanged(auth, user=>{
+  if(isAdmin) return;
+  if(!authHandled) handleUser(user);
 });
 
 // ===== GOOGLE LOGIN =====
@@ -1012,7 +1019,8 @@ window.loginGoogle=async()=>{
     const btn=document.getElementById('btnGoogle');
     btn.disabled=true;
     btn.innerHTML='<div style="display:flex;align-items:center;gap:10px;justify-content:center;"><div style="width:20px;height:20px;border:2.5px solid #ccc;border-top-color:#333;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div> Mengarahkan ke Google...</div>';
-    await signInWithRedirect(auth,gProvider);
+    authHandled=false;
+    await signInWithRedirect(auth, gProvider);
   }catch(err){
     const btn=document.getElementById('btnGoogle');
     if(btn){
