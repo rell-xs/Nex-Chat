@@ -355,6 +355,64 @@ body.light-mode{--bg:#f0f2f5;--panel:#fff;--card:#f7f8fa;--input:#e9ebee;--borde
 /* LAST SEEN */
 .last-seen-txt{font-size:11px;color:var(--muted);}
 
+/* VOICE MESSAGE */
+.voice-bubble{display:flex;align-items:center;gap:10px;padding:10px 14px;min-width:180px;}
+.voice-play{width:36px;height:36px;border-radius:50%;background:var(--green-bright);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.voice-wave{flex:1;height:28px;display:flex;align-items:center;gap:2px;}
+.voice-bar{flex:1;background:var(--muted);border-radius:2px;max-height:20px;min-height:4px;}
+.voice-bar.active{background:var(--green-bright);}
+.voice-dur{font-size:11px;color:var(--muted);flex-shrink:0;}
+.voice-btn{background:none;border:none;font-size:22px;cursor:pointer;padding:2px;flex-shrink:0;}
+.voice-btn.recording{color:var(--red);animation:pulse 1s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* STICKERS */
+.sticker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px;}
+.stk-btn{font-size:28px;padding:6px;border-radius:10px;cursor:pointer;text-align:center;background:none;border:none;}
+.stk-btn:active{transform:scale(1.3);}
+.sticker-bubble{font-size:52px;padding:4px!important;background:none!important;border:none!important;box-shadow:none!important;}
+
+/* DISAPPEARING */
+.disapp-badge{font-size:10px;color:var(--yellow);background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3);border-radius:6px;padding:2px 6px;margin-left:6px;}
+.timer-pill{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:2px 5px;min-width:18px;text-align:center;}
+
+/* PIN MESSAGE */
+.pinned-bar{background:rgba(88,166,255,.08);border-bottom:1px solid rgba(88,166,255,.2);padding:8px 16px;display:none;align-items:center;gap:10px;cursor:pointer;flex-shrink:0;}
+.pinned-bar.show{display:flex;}
+.pinned-bar-txt{flex:1;font-size:12px;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* CONTACTS */
+.contact-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(48,54,61,.5);}
+.req-accept{background:var(--green-bright);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-right:6px;}
+.req-decline{background:var(--input);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+.add-friend-btn{background:var(--green-bright);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;flex-shrink:0;}
+.add-friend-btn:disabled{background:var(--input);color:var(--muted);}
+.search-result{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:14px;margin-bottom:8px;border:1px solid var(--border);}
+
+/* CALL SCREEN */
+.call-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a1628,#0d2818);z-index:600;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 30px 50px;}
+.call-screen.open{display:flex;}
+.call-ava{width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.2);}
+.call-ava-ph{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:700;border:3px solid rgba(255,255,255,.2);}
+.call-name{font-size:26px;font-weight:700;color:#fff;margin-top:16px;}
+.call-status{font-size:14px;color:rgba(255,255,255,.6);margin-top:8px;animation:pulse 1.5s ease infinite;}
+.call-btns{display:flex;gap:24px;align-items:center;}
+.call-btn{width:64px;height:64px;border-radius:50%;border:none;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.call-btn.end{background:var(--red);}
+.call-btn.mute,.call-btn.speaker{background:rgba(255,255,255,.15);}
+.call-pulse{width:150px;height:150px;border-radius:50%;border:2px solid rgba(63,185,80,.3);position:absolute;animation:callPulse 1.8s ease infinite;}
+.call-pulse2{animation-delay:.6s;}
+@keyframes callPulse{0%{transform:scale(1);opacity:1}100%{transform:scale(2);opacity:0}}
+
+/* OFFLINE / NOTIF BANNER */
+.offline-banner{background:rgba(210,153,34,.15);border-bottom:1px solid rgba(210,153,34,.3);padding:8px 16px;display:none;align-items:center;gap:8px;flex-shrink:0;}
+.offline-banner.show{display:flex;}
+.offline-banner span{font-size:12px;color:var(--yellow);font-weight:500;}
+.notif-bar{background:rgba(88,166,255,.08);border-bottom:1px solid rgba(88,166,255,.2);padding:10px 16px;display:none;align-items:center;gap:10px;flex-shrink:0;}
+.notif-bar.show{display:flex;}
+.notif-bar span{flex:1;font-size:12px;color:var(--blue);}
+.notif-allow{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+
 input[type=file]{display:none;}
 .hidden{display:none!important;}
 </style>
@@ -426,7 +484,9 @@ input[type=file]{display:none;}
         <div class="topbar-name" id="myDisplayName">—</div>
         <div class="topbar-tag" id="myTag">@—</div>
       </div>
+      <div class="notif-bar" id="notifBar" style="display:none;"><span>🔔 Izinkan notifikasi untuk pesan masuk</span><button class="notif-allow" onclick="requestNotifPermission()">Izinkan</button><button style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;" onclick="document.getElementById('notifBar').style.display='none'">✕</button></div>
       <div style="display:flex;gap:4px;">
+        <button class="tb-btn" onclick="openContacts()" title="Kontak">👥</button>
         <button class="tb-btn" onclick="showNewGroup()" title="Grup baru">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
         </button>
@@ -465,7 +525,15 @@ input[type=file]{display:none;}
       <div class="ch-name" id="chName">—</div>
       <div class="ch-sub" id="chSub">online</div>
     </div>
+    <button class="tb-btn" onclick="startCall('voice')" id="callVoiceBtn" title="Panggilan suara">📞</button>
+    <button class="tb-btn" onclick="openDisappSetting()" title="Pesan menghilang" id="disappBtn">⏳</button>
     <button class="tb-btn" onclick="toggleWallpaper()" title="Wallpaper">🖼️</button>
+  </div>
+  <div class="offline-banner" id="offlineBanner">⚡<span>Kamu sedang offline — pesan mungkin tidak terkirim</span></div>
+  <div class="pinned-bar" id="pinnedBar" onclick="scrollToPinned()">
+    <span class="pin-icon">📌</span>
+    <div class="pinned-bar-txt" id="pinnedBarTxt">Pesan pin</div>
+    <span style="font-size:12px;color:var(--muted);">✕</span>
   </div>
   <div class="msgs-area" id="msgsArea">
     <div class="date-pill"><span>Hari ini</span></div>
@@ -483,6 +551,8 @@ input[type=file]{display:none;}
         <button class="emo-tog" onclick="toggleEmoji()">😊</button>
         <textarea id="msgTxt" rows="1" placeholder="Ketik pesan..." onkeydown="onKey(event)" oninput="onType(this)"></textarea>
         <label class="attach-btn" for="imgFile" title="Kirim foto">📎</label>
+        <button class="attach-btn" onclick="openStickerModal()" title="Stiker">😄</button>
+        <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecord()" title="Pesan suara">🎤</button>
       </div>
       <button class="send-btn" onclick="sendMsg()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -636,6 +706,71 @@ input[type=file]{display:none;}
     <div style="font-size:13px;color:var(--muted);margin-bottom:8px;text-align:center;">— atau —</div>
     <input class="field-input" id="storyTextInput" placeholder="Tulis teks story..." maxlength="100">
     <button class="btn-main" onclick="postStory()" style="margin-top:12px;">📤 Post Story</button>
+  </div>
+</div>
+
+<!-- CALL SCREEN -->
+<div class="call-screen" id="callScreen">
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;">
+    <div class="call-pulse"></div><div class="call-pulse call-pulse2"></div>
+    <div id="callAvaWrap"></div>
+  </div>
+  <div style="text-align:center;">
+    <div class="call-name" id="callName">—</div>
+    <div class="call-status" id="callStatus">Memanggil...</div>
+  </div>
+  <div class="call-btns">
+    <button class="call-btn mute" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
+    <button class="call-btn end" onclick="endCall()">📵</button>
+    <button class="call-btn speaker" onclick="toggleSpeaker()" title="Speaker">🔊</button>
+  </div>
+</div>
+
+<!-- CONTACTS MODAL -->
+<div class="modal" id="modalContacts" onclick="closeModal(event,'modalContacts')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;margin-bottom:16px;">
+      <div class="modal-title" style="margin:0;flex:1;">👥 Kontak & Teman</div>
+      <button onclick="switchContactTab('search')" id="ctabSearch" style="background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:8px;">Cari</button>
+      <button onclick="switchContactTab('requests')" id="ctabReq" style="background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:8px;">Permintaan <span id="reqBadge" style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;display:none;"></span></button>
+      <button onclick="switchContactTab('blocked')" id="ctabBlocked" style="background:none;border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:8px;">Blokir</button>
+    </div>
+    <!-- Search tab -->
+    <div id="ctSearch">
+      <div style="background:var(--input);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span>🔍</span>
+        <input id="userSearchInput" style="flex:1;background:none;border:none;outline:none;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;" placeholder="Cari username..." oninput="searchUsers(this.value)">
+      </div>
+      <div id="userSearchResults"></div>
+    </div>
+    <!-- Requests tab -->
+    <div id="ctRequests" style="display:none;">
+      <div id="friendRequestList"></div>
+    </div>
+    <!-- Blocked tab -->
+    <div id="ctBlocked" style="display:none;">
+      <div id="blockedList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STICKER MODAL -->
+<div class="modal" id="modalSticker" onclick="closeModal(event,'modalSticker')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">😄 Stiker</div>
+    <div class="sticker-grid" id="stickerGrid"></div>
+  </div>
+</div>
+
+<!-- DISAPPEARING SETTING MODAL -->
+<div class="modal" id="modalDisapp" onclick="closeModal(event,'modalDisapp')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⏳ Pesan Menghilang</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Pesan akan otomatis terhapus setelah waktu yang ditentukan</div>
+    <div id="disappOptions"></div>
   </div>
 </div>
 
@@ -1326,6 +1461,445 @@ window.monitorConv=(cid,a,b)=>{
   });
 };
 window.closeMon=()=>document.getElementById('monView').classList.remove('open');
+
+// === STICKERS ===
+const STICKERS=['😀','😂','🥰','😎','🤩','🥺','😭','😤','🤯','🥳','👍','👎','🙏','💪','❤️','🔥','⭐','🎉','💎','🏆','🎮','🚀','🌟','💯','🎵','🍕','🐶','🐱','🦋','🌈','😱','🤑','💀','🙈','🫶','🤭','😇','🤗','🫡','🌺','🐸','🦄','🍔','🎯','✨'];
+const sg=document.getElementById('stickerGrid');
+STICKERS.forEach(s=>{const b=document.createElement('button');b.className='stk-btn';b.textContent=s;b.onclick=()=>sendSticker(s);sg.appendChild(b);});
+window.openStickerModal=()=>document.getElementById('modalSticker').classList.add('open');
+window.sendSticker=s=>{
+  document.getElementById('modalSticker').classList.remove('open');
+  if(!me||!activeConv)return;
+  push(ref(db,`messages/${activeConv.id}`),{text:s,type:'sticker',senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',ts:serverTimestamp()});
+  update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text:s,ts:serverTimestamp(),senderId:me.id}});
+};
+
+// === VOICE RECORDING ===
+let mediaRecorder=null,audioChunks=[],isRecording=false,recTimer=null,recSeconds=0;
+window.toggleVoiceRecord=async()=>{
+  if(isRecording){stopVoiceRecord();return;}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder=new MediaRecorder(stream);audioChunks=[];recSeconds=0;
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
+    mediaRecorder.onstop=async()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const blob=new Blob(audioChunks,{type:'audio/webm'});
+      if(!activeConv)return;
+      toast('Mengirim pesan suara...','',3000);
+      try{
+        const r=new FileReader();
+        r.onload=async d=>{
+          const sr2=sRef(storage,`voice/${activeConv.id}_${Date.now()}.webm`);
+          await uploadString(sr2,d.result,'data_url');
+          const url=await getDownloadURL(sr2);
+          const dur=recSeconds;
+          push(ref(db,`messages/${activeConv.id}`),{type:'voice',voiceUrl:url,duration:dur,text:'🎤 Pesan suara',senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',ts:serverTimestamp()});
+          update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text:'🎤 Pesan suara',ts:serverTimestamp(),senderId:me.id}});
+        };
+        r.readAsDataURL(blob);
+      }catch(e){toast('Gagal kirim suara','err');}
+    };
+    mediaRecorder.start();isRecording=true;
+    const btn=document.getElementById('voiceBtn');
+    btn.textContent='⏹️';btn.classList.add('recording');
+    recTimer=setInterval(()=>{recSeconds++;btn.title=recSeconds+'s';},1000);
+    toast('🎤 Merekam... tap lagi untuk stop','',60000);
+  }catch(e){toast('Tidak bisa akses mikrofon!','err');}
+};
+function stopVoiceRecord(){
+  if(mediaRecorder&&isRecording){mediaRecorder.stop();isRecording=false;}
+  clearInterval(recTimer);
+  const btn=document.getElementById('voiceBtn');
+  btn.textContent='🎤';btn.classList.remove('recording');btn.title='Pesan suara';
+}
+
+function renderVoiceBubble(msg){
+  const dur=msg.duration||0;
+  const bars=Array.from({length:16},(_,i)=>{const h=Math.max(4,Math.random()*20);return`<div class="voice-bar" style="height:${h}px;"></div>`;}).join('');
+  return`<div class="voice-bubble">
+    <button class="voice-play" onclick="playVoice(this,'${msg.voiceUrl||''}',${dur})">▶</button>
+    <div class="voice-wave">${bars}</div>
+    <span class="voice-dur">${dur}s</span>
+  </div>`;
+}
+let currentAudio=null;
+window.playVoice=(btn,url,dur)=>{
+  if(currentAudio){currentAudio.pause();currentAudio=null;document.querySelectorAll('.voice-play').forEach(b=>b.textContent='▶');if(btn.textContent==='▶'&&btn.dataset.url===url){btn.dataset.url='';return;}}
+  btn.textContent='⏸';btn.dataset.url=url;
+  currentAudio=new Audio(url);
+  currentAudio.play().catch(()=>toast('Tidak bisa memutar suara','err'));
+  currentAudio.onended=()=>{btn.textContent='▶';currentAudio=null;};
+};
+
+// === DISAPPEARING MESSAGES ===
+const DISAPP_OPTIONS=[{label:'Nonaktif',val:0},{label:'30 detik',val:30000},{label:'5 menit',val:300000},{label:'1 jam',val:3600000},{label:'24 jam',val:86400000}];
+let disappTimeout=0;
+window.openDisappSetting=async()=>{
+  if(!activeConv)return;
+  const snap=await get(ref(db,`conversations/${activeConv.id}/disappearing`));
+  const cur=snap.exists()?snap.val():0;
+  const cont=document.getElementById('disappOptions');
+  cont.innerHTML=DISAPP_OPTIONS.map(o=>`<div onclick="setDisapp(${o.val})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px;border-bottom:1px solid var(--border);cursor:pointer;">
+    <span style="font-size:15px;font-weight:500;">${o.label}</span>
+    ${cur===o.val?'<span style="color:var(--green-bright);font-size:18px;">✓</span>':''}
+  </div>`).join('');
+  document.getElementById('modalDisapp').classList.add('open');
+};
+window.setDisapp=async val=>{
+  if(!activeConv)return;
+  await update(ref(db,`conversations/${activeConv.id}`),{disappearing:val});
+  disappTimeout=val;
+  document.getElementById('modalDisapp').classList.remove('open');
+  toast(val===0?'Pesan menghilang dinonaktifkan':'Pesan akan hilang setelah '+DISAPP_OPTIONS.find(o=>o.val===val)?.label,'ok');
+};
+function scheduleDisappear(msgId,convId,timeout){
+  if(!timeout)return;
+  setTimeout(async()=>{
+    try{await update(ref(db,`messages/${convId}/${msgId}`),{deleted:true,text:''});}catch(e){}
+  },timeout);
+}
+
+// === PIN MESSAGE ===
+window.ctxPin=async()=>{
+  if(!ctxMsg||!activeConv)return;
+  closeCtxMenu();
+  await update(ref(db,`conversations/${activeConv.id}`),{pinnedMsg:{text:ctxMsg.text||'📷 Foto',msgId:ctxMsg.id,pinnedBy:me.name}});
+  toast('Pesan di-pin 📌','ok');
+};
+window.ctxUnpin=async()=>{
+  if(!activeConv)return;
+  closeCtxMenu();
+  await update(ref(db,`conversations/${activeConv.id}`),{pinnedMsg:null});
+  document.getElementById('pinnedBar').classList.remove('show');
+  toast('Pin dihapus','ok');
+};
+window.scrollToPinned=()=>{
+  const bar=document.getElementById('pinnedBar');
+  if(bar.dataset.msgId){
+    const el=document.querySelector(`[data-msg-id="${bar.dataset.msgId}"]`);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.background='rgba(88,166,255,.15)';setTimeout(()=>el.style.background='',1500);}
+  }
+};
+function loadPinnedMsg(convId){
+  const pu=onValue(ref(db,`conversations/${convId}/pinnedMsg`),snap=>{
+    const bar=document.getElementById('pinnedBar');
+    if(snap.exists()&&snap.val()){
+      const p=snap.val();
+      bar.classList.add('show');
+      document.getElementById('pinnedBarTxt').textContent='📌 '+p.text;
+      bar.dataset.msgId=p.msgId||'';
+    } else {bar.classList.remove('show');}
+  });
+  convUnsubs.push(pu);
+}
+
+// === CONTACTS / FRIENDS ===
+window.openContacts=()=>{
+  switchContactTab('search');
+  loadFriendRequests();
+  loadBlockedUsers();
+  document.getElementById('modalContacts').classList.add('open');
+};
+window.switchContactTab=tab=>{
+  ['search','requests','blocked'].forEach(t=>{
+    document.getElementById('ct'+t.charAt(0).toUpperCase()+t.slice(1)).style.display=t===tab?'block':'none';
+    document.getElementById('ctab'+t.charAt(0).toUpperCase()+t.slice(1)).style.color=t===tab?'var(--green-bright)':'var(--muted)';
+  });
+};
+window.searchUsers=async q=>{
+  const res=document.getElementById('userSearchResults');
+  if(!q||q.length<2){res.innerHTML='<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;">Ketik username untuk mencari</div>';return;}
+  res.innerHTML='<div style="color:var(--muted);text-align:center;padding:16px;font-size:13px;">Mencari...</div>';
+  const clean=q.toLowerCase().replace(/[^a-z0-9_.]/g,'');
+  // Search by username
+  const snap=await get(ref(db,'usernames'));
+  const matches=[];
+  if(snap.exists()){
+    snap.forEach(c=>{if(c.key.includes(clean)&&c.val()!==me.id)matches.push({username:c.key,uid:c.val()});});
+  }
+  if(!matches.length){res.innerHTML='<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;">Tidak ditemukan</div>';return;}
+  const htmlParts=await Promise.all(matches.slice(0,10).map(async m=>{
+    const uSnap=await get(ref(db,`users/${m.uid}`));
+    const u=uSnap.exists()?uSnap.val():{name:m.username,photo:''};
+    const blockedSnap=await get(ref(db,`blocked/${me.id}/${m.uid}`));
+    const isBlocked=blockedSnap.exists();
+    return`<div class="search-result">
+      ${avaHtml(u.photo||'',u.name,40)}
+      <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;">${esc(u.name)}</div><div style="font-size:12px;color:var(--muted);">@${esc(m.username)}</div></div>
+      ${isBlocked?`<button onclick="unblockUser('${m.uid}')" style="background:var(--input);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer;">Buka blokir</button>`
+      :`<button class="add-friend-btn" onclick="sendFriendRequest('${m.uid}','${esc(u.name)}')">Tambah teman</button>
+        <button onclick="blockUser('${m.uid}','${esc(u.name)}')" style="background:rgba(248,81,73,.1);color:var(--red);border:1px solid rgba(248,81,73,.2);border-radius:8px;padding:6px 10px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer;margin-left:6px;">🚫</button>`}
+    </div>`;
+  }));
+  res.innerHTML=htmlParts.join('');
+};
+window.sendFriendRequest=async(uid,name)=>{
+  await set(ref(db,`friendRequests/${uid}/${me.id}`),{from:me.id,fromName:me.name,fromPhoto:me.photo||'',ts:serverTimestamp()});
+  toast('Permintaan pertemanan dikirim ke '+name+' ✓','ok');
+};
+function loadFriendRequests(){
+  get(ref(db,`friendRequests/${me.id}`)).then(snap=>{
+    const list=document.getElementById('friendRequestList');
+    const reqBadge=document.getElementById('reqBadge');
+    if(!snap.exists()||!Object.keys(snap.val()).length){list.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">Tidak ada permintaan</div>';reqBadge.style.display='none';return;}
+    const reqs=Object.entries(snap.val());
+    reqBadge.textContent=reqs.length;reqBadge.style.display='inline';
+    list.innerHTML=reqs.map(([uid,r])=>`<div class="contact-item">
+      ${avaHtml(r.fromPhoto||'',r.fromName||'?',44)}
+      <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;">${esc(r.fromName||'?')}</div><div style="font-size:12px;color:var(--muted);">Ingin berteman</div></div>
+      <button class="req-accept" onclick="acceptFriend('${uid}','${esc(r.fromName||'')}')">✓ Terima</button>
+      <button class="req-decline" onclick="declineFriend('${uid}')">✕</button>
+    </div>`).join('');
+  });
+}
+window.acceptFriend=async(uid,name)=>{
+  await remove(ref(db,`friendRequests/${me.id}/${uid}`));
+  await set(ref(db,`friends/${me.id}/${uid}`),{since:serverTimestamp()});
+  await set(ref(db,`friends/${uid}/${me.id}`),{since:serverTimestamp()});
+  loadFriendRequests();toast('Sekarang berteman dengan '+name+' 🎉','ok');
+};
+window.declineFriend=async uid=>{
+  await remove(ref(db,`friendRequests/${me.id}/${uid}`));
+  loadFriendRequests();toast('Permintaan ditolak','');
+};
+window.blockUser=async(uid,name)=>{
+  if(!confirm('Blokir '+name+'?'))return;
+  await set(ref(db,`blocked/${me.id}/${uid}`),{ts:serverTimestamp()});
+  toast(name+' diblokir 🚫','ok');
+  document.getElementById('userSearchResults').innerHTML='';
+};
+window.unblockUser=async uid=>{
+  await remove(ref(db,`blocked/${me.id}/${uid}`));
+  toast('Blokir dibuka ✓','ok');
+  document.getElementById('userSearchInput').dispatchEvent(new Event('input'));
+};
+function loadBlockedUsers(){
+  get(ref(db,`blocked/${me.id}`)).then(async snap=>{
+    const list=document.getElementById('blockedList');
+    if(!snap.exists()||!Object.keys(snap.val()).length){list.innerHTML='<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px;">Tidak ada user yang diblokir</div>';return;}
+    const htmlParts=await Promise.all(Object.keys(snap.val()).map(async uid=>{
+      const uSnap=await get(ref(db,`users/${uid}`));
+      const u=uSnap.exists()?uSnap.val():{name:uid.slice(0,8),photo:''};
+      return`<div class="contact-item">${avaHtml(u.photo||'',u.name,44)}<div style="flex:1;"><div style="font-size:14px;font-weight:600;">${esc(u.name)}</div></div><button onclick="unblockUser('${uid}')" style="background:var(--input);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer;">Buka blokir</button></div>`;
+    }));
+    list.innerHTML=htmlParts.join('');
+  });
+}
+
+// === CALL (UI Simulation) ===
+let callMuted=false,callSpeaker=true,callInterval=null;
+window.startCall=type=>{
+  if(!activeConv)return;
+  const screen=document.getElementById('callScreen');
+  const aw=document.getElementById('callAvaWrap');
+  aw.innerHTML=avaHtml(activeConv.photo||'',activeConv.name,110);
+  document.getElementById('callName').textContent=activeConv.name;
+  document.getElementById('callStatus').textContent='Memanggil...';
+  screen.classList.add('open');
+  // Simulate connecting after 3s
+  setTimeout(()=>{
+    if(!screen.classList.contains('open'))return;
+    document.getElementById('callStatus').textContent='Tersambung';
+    document.getElementById('callStatus').style.animation='none';
+    let s=0;callInterval=setInterval(()=>{s++;const m=Math.floor(s/60);const sec=s%60;document.getElementById('callStatus').textContent=`${m}:${sec.toString().padStart(2,'0')}`;},1000);
+  },3000);
+  // Notify other user via Firebase
+  if(activeConv.otherId){
+    set(ref(db,`calls/${activeConv.otherId}`),{from:me.id,fromName:me.name,fromPhoto:me.photo||'',type,ts:serverTimestamp()});
+  }
+};
+window.endCall=()=>{
+  clearInterval(callInterval);callInterval=null;
+  document.getElementById('callScreen').classList.remove('open');
+  document.getElementById('callStatus').style.animation='';
+  if(activeConv?.otherId)remove(ref(db,`calls/${activeConv.otherId}`));
+  toast('Panggilan diakhiri','');
+};
+window.toggleMute=()=>{
+  callMuted=!callMuted;
+  document.getElementById('muteBtn').textContent=callMuted?'🔇':'🎤';
+  toast(callMuted?'Mikrofon dimatikan 🔇':'Mikrofon aktif 🎤','');
+};
+window.toggleSpeaker=()=>{
+  callSpeaker=!callSpeaker;
+  document.getElementById('callScreen').querySelector('.speaker').textContent=callSpeaker?'🔊':'🔈';
+  toast(callSpeaker?'Speaker aktif':'Speaker mati','');
+};
+
+// Listen for incoming calls
+function listenIncomingCall(){
+  if(!me||me.id==='admin')return;
+  const u=onValue(ref(db,`calls/${me.id}`),snap=>{
+    if(!snap.exists())return;
+    const c=snap.val();
+    if(Date.now()-c.ts>30000){remove(ref(db,`calls/${me.id}`));return;}
+    if(confirm(`📞 Panggilan masuk dari ${c.fromName}. Angkat?`)){
+      // Show call screen
+      document.getElementById('callAvaWrap').innerHTML=avaHtml(c.fromPhoto||'',c.fromName,110);
+      document.getElementById('callName').textContent=c.fromName;
+      document.getElementById('callStatus').textContent='Tersambung';
+      document.getElementById('callScreen').classList.add('open');
+      let s=0;callInterval=setInterval(()=>{s++;const m=Math.floor(s/60);const sec=s%60;document.getElementById('callStatus').textContent=`${m}:${sec.toString().padStart(2,'0')}`;},1000);
+    }
+    remove(ref(db,`calls/${me.id}`));
+  });
+  homeUnsubs.push(u);
+}
+
+// === PUSH NOTIFICATIONS ===
+window.requestNotifPermission=async()=>{
+  document.getElementById('notifBar').style.display='none';
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){toast('Notifikasi diaktifkan! 🔔','ok');localStorage.setItem('nc_notif','1');}
+  else toast('Notifikasi ditolak','err');
+};
+function checkNotifPermission(){
+  if(!('Notification' in window))return;
+  if(Notification.permission==='default'&&!localStorage.getItem('nc_notif')){
+    // Show inline notif bar in home
+    const nb=document.getElementById('notifBar');
+    if(nb)nb.style.display='flex';
+  }
+}
+function sendPushNotif(title,body){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  try{new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💬</text></svg>'});}catch(e){}
+}
+
+// === OFFLINE MODE ===
+window.addEventListener('online',()=>{document.getElementById('offlineBanner').classList.remove('show');toast('Kembali online ✓','ok');});
+window.addEventListener('offline',()=>{document.getElementById('offlineBanner').classList.add('show');toast('Kamu offline','err');});
+if(!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
+
+// === PATCH: extend openConv to load pinned + disappearing ===
+const _origOpenConv=window.openConv;
+window.openConv=(cid,name,photo,type,otherId)=>{
+  _origOpenConv(cid,name,photo,type,otherId);
+  loadPinnedMsg(cid);
+  // Load disappearing setting
+  get(ref(db,`conversations/${cid}/disappearing`)).then(snap=>{disappTimeout=snap.exists()?snap.val():0;});
+};
+
+// === PATCH: extend sendMsg to support disappearing ===
+const _origSendMsg=window.sendMsg;
+window.sendMsg=()=>{
+  _origSendMsg();
+  // Schedule disappear if needed
+  if(disappTimeout&&activeConv){
+    const mq2=query(ref(db,`messages/${activeConv.id}`),orderByChild('ts'));
+    get(mq2).then(snap=>{
+      if(!snap.exists())return;
+      let lastKey=null;
+      snap.forEach(c=>{lastKey=c.key;});
+      if(lastKey)scheduleDisappear(lastKey,activeConv.id,disappTimeout);
+    });
+  }
+};
+
+// === PATCH: extend ctx menu to add pin option ===
+const origOpenCtx=window.openCtxMenu||function(){};
+// Add pin/unpin to ctx menu items via DOM
+const ctxMenu=document.getElementById('ctxMenu');
+const pinItem=document.createElement('div');
+pinItem.className='ctx-item';pinItem.id='ctxPinBtn';pinItem.innerHTML='📌 Pin pesan';
+pinItem.onclick=()=>ctxPin();
+ctxMenu.insertBefore(pinItem,document.getElementById('ctxDeleteBtn'));
+
+// === PATCH: extend renderBubble for voice + sticker ===
+const _origRenderBubble=window.renderBubble||function(){};
+// Override is handled inside loadMessages via type check
+
+// Patch loadMessages to handle voice + sticker types in renderBubble
+const _origLoadMsgs=window.loadMessages||null;
+
+// Extend the onValue handler for messages to handle new types
+// We patch renderBubble directly by checking msg.type in it
+// The current renderBubble already handles 'image' and 'text'
+// We need to patch it for 'voice' and 'sticker'
+// Since it's defined as a named function, we patch loadMessages re-rendering
+
+// === INIT NEW FEATURES ===
+// Extend startHomeListeners
+const _origStartHome=window.startHomeListeners||function(){};
+const origStartHomeListeners=startHomeListeners;
+function startHomeListeners(){
+  origStartHomeListeners();
+  listenIncomingCall();
+  checkNotifPermission();
+}
+
+// Patch renderBubble to support voice + sticker
+const _oldRB=renderBubble;
+function renderBubble(msg,msgId,type){
+  if(msg.type==='voice'){
+    const area=document.getElementById('msgsArea');
+    const isOut=msg.senderId===me.id;
+    const row=document.createElement('div');
+    row.className='msg-row '+(isOut?'out':'in');
+    row.dataset.msgId=msgId;
+    let inner='';
+    if(!isOut&&type==='group')inner+=`<div class="msg-sender-name">${esc(msg.senderName||'?')}</div>`;
+    inner+=renderVoiceBubble(msg);
+    inner+=`<div class="msg-meta">${fmtT(msg.ts)}${isOut?` <span class="tick">✓✓</span>`:''}</div>`;
+    row.innerHTML=inner;
+    const vb=row.querySelector('.voice-bubble');
+    if(vb){
+      vb.addEventListener('contextmenu',e=>{e.preventDefault();openCtxMenu(e,msg,msgId,isOut);});
+      vb.addEventListener('touchstart',()=>{ctxLongTimer=setTimeout(()=>openCtxMenu(null,msg,msgId,isOut),600);},{passive:true});
+      vb.addEventListener('touchend',()=>clearTimeout(ctxLongTimer));
+    }
+    area.appendChild(row);
+    return;
+  }
+  if(msg.type==='sticker'){
+    const area=document.getElementById('msgsArea');
+    const isOut=msg.senderId===me.id;
+    const row=document.createElement('div');
+    row.className='msg-row '+(isOut?'out':'in');
+    row.dataset.msgId=msgId;
+    row.innerHTML=`<div class="bubble sticker-bubble">${esc(msg.text||'')}</div><div class="msg-meta">${fmtT(msg.ts)}</div>`;
+    area.appendChild(row);
+    return;
+  }
+  _oldRB(msg,msgId,type);
+}
+
+// Also patch sendPushNotif into message loading
+const _oldLoadMsgs2=loadMessages;
+function loadMessages(cid,type){
+  stopConvListeners();
+  const area=document.getElementById('msgsArea');
+  area.innerHTML='<div class="date-pill"><span>Hari ini</span></div>';
+  const mq=query(ref(db,`messages/${cid}`),orderByChild('ts'));
+  let firstLoad=true;
+  const u=onValue(mq,snap=>{
+    const count=snap.size||0;
+    if(count>lastMsgCount&&lastMsgCount>0){
+      playNotif();
+      // Push notification
+      if(activeConv&&snap.exists()){
+        let last=null;snap.forEach(c=>{last=c.val();});
+        if(last&&last.senderId!==me.id){
+          sendPushNotif('Pesan dari '+last.senderName,last.text||'📷 Foto');
+        }
+      }
+    }
+    lastMsgCount=count;
+    area.innerHTML='<div class="date-pill"><span>Hari ini</span></div>';
+    if(snap.exists())snap.forEach(c=>renderBubble(c.val(),c.key,type));
+    area.scrollTop=area.scrollHeight;
+    firstLoad=false;
+  });
+  convUnsubs.push(u);
+  if(activeConv?.otherId){
+    const tu=onValue(ref(db,`typing/${activeConv.otherId}~~${me.id}`),s=>{
+      document.getElementById('typingRow').classList.toggle('show',s.exists());
+      if(s.exists())document.getElementById('msgsArea').scrollTop=99999;
+    });
+    convUnsubs.push(tu);
+  }
+}
 </script>
 </body>
 </html>
