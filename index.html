@@ -885,7 +885,7 @@ import {
 
 const cfg={
   apiKey:"AIzaSyAEu8O17pKTtKQSbimhIWZw3q8Hg_0kk-o",
-  authDomain:"rell-xs.github.io",
+  authDomain:"chat-45c84.firebaseapp.com",
   databaseURL:"https://chat-45c84-default-rtdb.firebaseio.com",
   projectId:"chat-45c84",
   storageBucket:"chat-45c84.firebasestorage.app",
@@ -1020,7 +1020,8 @@ window.loginGoogle=async()=>{
     btn.disabled=true;
     btn.innerHTML='<div style="display:flex;align-items:center;gap:10px;justify-content:center;"><div style="width:20px;height:20px;border:2.5px solid #ccc;border-top-color:#333;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;"></div> Mengarahkan ke Google...</div>';
     authHandled=false;
-    await signInWithRedirect(auth, gProvider);
+    gProvider.setCustomParameters({prompt:'select_account'});
+    await signInWithPopup(auth, gProvider);
   }catch(err){
     const btn=document.getElementById('btnGoogle');
     if(btn){
