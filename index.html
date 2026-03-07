@@ -779,7 +779,7 @@ input[type=file]{display:none;}
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import{getDatabase,ref,push,onValue,set,remove,serverTimestamp,query,orderByChild,get,onDisconnect,update,off}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import{getDatabase,ref,push,onValue,set,remove,serverTimestamp,query,orderByChild,limitToLast,get,onDisconnect,update,off}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged,browserLocalPersistence,setPersistence}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import{getStorage,ref as sRef,uploadString,getDownloadURL}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
@@ -848,7 +848,11 @@ currentWallpaper=savedWp;
 // === AUTH ===
 setPersistence(auth,browserLocalPersistence).catch(()=>{});
 
+// Splash timeout fallback - max 8 seconds then show login
+let splashTimeout=setTimeout(()=>{if(document.getElementById('splash')&&!document.getElementById('splash').classList.contains('off')){show('login');}},8000);
+
 onAuthStateChanged(auth,async user=>{
+  clearTimeout(splashTimeout);
   if(isAdmin)return;
   if(user){
     show('splash');
@@ -961,41 +965,50 @@ function renderMyTopbar(){
   document.getElementById('myTag').textContent='@'+(me.username||'...');
 }
 
-// === CHAT LIST ===
+// === CHAT LIST (optimized - parallel fetch) ===
 async function renderChatList(){
   if(currentTab==='story'){renderStoryTab();return;}
   const container=document.getElementById('chatList');
-  const snap=await get(ref(db,'conversations'));
-  const myConvs=[];
-  if(snap.exists())snap.forEach(c=>{const d=c.val();if(d.type===(currentTab==='private'?'private':'group')&&d.members&&d.members[me.id])myConvs.push({id:c.key,...d});});
-  if(!myConvs.length&&(currentTab==='group'||!allOnlineUsers.length)){
-    container.innerHTML=`<div class="empty-list"><div class="ico">${currentTab==='group'?'👥':'💬'}</div><div class="etitle">Belum ada ${currentTab==='group'?'grup':'chat'}</div><div class="edesc">Tap + untuk memulai</div></div>`;return;
-  }
-  const rendered=new Set();let html='';
-  for(const conv of myConvs){
+  // Show skeleton while loading
+  container.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Memuat chat...</div>';
+  try{
+    const snap=await get(ref(db,'conversations'));
+    const myConvs=[];
+    if(snap.exists())snap.forEach(c=>{const d=c.val();if(d.type===(currentTab==='private'?'private':'group')&&d.members&&d.members[me.id])myConvs.push({id:c.key,...d});});
+    // Sort by lastMessage.ts descending
+    myConvs.sort((a,b)=>((b.lastMessage?.ts||0)-(a.lastMessage?.ts||0)));
+    if(!myConvs.length&&(currentTab==='group'||!allOnlineUsers.length)){
+      container.innerHTML=`<div class="empty-list"><div class="ico">${currentTab==='group'?'👥':'💬'}</div><div class="etitle">Belum ada ${currentTab==='group'?'grup':'chat'}</div><div class="edesc">Tap + untuk memulai</div></div>`;return;
+    }
+    const rendered=new Set();const items=[];
     if(currentTab==='private'){
-      const otherId=Object.keys(conv.members).find(id=>id!==me.id);
-      if(!otherId||rendered.has(otherId))continue;
-      rendered.add(otherId);
-      const uSnap=await get(ref(db,`users/${otherId}`));
-      const u=uSnap.exists()?uSnap.val():{name:'Unknown',photo:'',username:''};
-      const isOnline=allOnlineUsers.some(x=>x.id===otherId);
-      const pSnap=await get(ref(db,`presence/${otherId}`));
-      const lastSeen=pSnap.exists()&&!pSnap.val().online?pSnap.val().lastSeen:null;
-      const lm=conv.lastMessage||{};
-      html+=buildChatItem(conv.id,u.name,u.photo||'',isOnline,lm.text||'Mulai percakapan',lm.ts,'private',otherId);
+      // Fetch all user data in parallel
+      const otherIds=[...new Set(myConvs.map(c=>Object.keys(c.members||{}).find(id=>id!==me.id)).filter(Boolean))];
+      const userFetches=otherIds.map(id=>get(ref(db,`users/${id}`)));
+      const userSnaps=await Promise.all(userFetches);
+      const userMap={};
+      otherIds.forEach((id,i)=>{if(userSnaps[i].exists())userMap[id]=userSnaps[i].val();});
+      for(const conv of myConvs){
+        const otherId=Object.keys(conv.members||{}).find(id=>id!==me.id);
+        if(!otherId||rendered.has(otherId))continue;
+        rendered.add(otherId);
+        const u=userMap[otherId]||{name:'Unknown',photo:'',username:''};
+        const isOnline=allOnlineUsers.some(x=>x.id===otherId);
+        const lm=conv.lastMessage||{};
+        items.push(buildChatItem(conv.id,u.name,u.photo||'',isOnline,lm.text||'Mulai percakapan',lm.ts,'private',otherId));
+      }
+      for(const u of allOnlineUsers){
+        if(rendered.has(u.id))continue;
+        items.push(buildChatItem(convId(me.id,u.id),u.name,u.photo||'',true,'Tap untuk mulai chat',null,'private',u.id));
+      }
     } else {
-      const lm=conv.lastMessage||{};
-      html+=buildChatItem(conv.id,conv.name,conv.photo||'',false,lm.text||'Grup dibuat',lm.ts,'group','');
+      for(const conv of myConvs){
+        const lm=conv.lastMessage||{};
+        items.push(buildChatItem(conv.id,conv.name,conv.photo||'',false,lm.text||'Grup dibuat',lm.ts,'group',''));
+      }
     }
-  }
-  if(currentTab==='private'){
-    for(const u of allOnlineUsers){
-      if(rendered.has(u.id))continue;
-      html+=buildChatItem(convId(me.id,u.id),u.name,u.photo||'',true,'Tap untuk mulai chat',null,'private',u.id);
-    }
-  }
-  container.innerHTML=html||`<div class="empty-list"><div class="ico">💬</div><div class="etitle">Belum ada chat</div><div class="edesc">Tap + untuk mulai</div></div>`;
+    container.innerHTML=items.join('')||`<div class="empty-list"><div class="ico">💬</div><div class="etitle">Belum ada chat</div><div class="edesc">Tap + untuk mulai</div></div>`;
+  }catch(e){container.innerHTML='<div class="empty-list"><div class="ico">⚠️</div><div class="etitle">Gagal memuat</div><div class="edesc">Cek koneksi internet</div></div>';}
 }
 
 function buildChatItem(cid,name,photo,isOnline,preview,ts,type,otherId){
@@ -1095,7 +1108,7 @@ function loadMessages(cid,type){
   stopConvListeners();
   const area=document.getElementById('msgsArea');
   area.innerHTML='<div class="date-pill"><span>Hari ini</span></div>';
-  const mq=query(ref(db,`messages/${cid}`),orderByChild('ts'));
+  const mq=query(ref(db,`messages/${cid}`),orderByChild('ts'),limitToLast(80));
   const u=onValue(mq,snap=>{
     const count=snap.size||0;
     if(count>lastMsgCount&&lastMsgCount>0)playNotif();
@@ -1871,7 +1884,7 @@ function loadMessages(cid,type){
   stopConvListeners();
   const area=document.getElementById('msgsArea');
   area.innerHTML='<div class="date-pill"><span>Hari ini</span></div>';
-  const mq=query(ref(db,`messages/${cid}`),orderByChild('ts'));
+  const mq=query(ref(db,`messages/${cid}`),orderByChild('ts'),limitToLast(80));
   let firstLoad=true;
   const u=onValue(mq,snap=>{
     const count=snap.size||0;
