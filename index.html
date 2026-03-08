@@ -419,16 +419,15 @@ input[type=file]{display:none;}
 </head>
 <body>
 
-<!-- SPLASH -->
-<div class="screen" id="splash" onclick="show('login')" style="cursor:pointer;">
+<!-- SPLASH (hidden, not used) -->
+<div class="screen off" id="splash">
   <div class="splash-logo">💬</div>
   <div class="splash-name">Nex<em style="color:#3FB950">Chat</em></div>
   <div class="splash-spin"></div>
-  <div style="position:absolute;bottom:40px;font-size:12px;color:var(--muted);animation:fadeUp .4s 2s ease both;opacity:0;">Tap untuk skip</div>
 </div>
 
 <!-- LOGIN -->
-<div class="screen off" id="login">
+<div class="screen" id="login">
   <div class="login-hero">
     <div class="hero-glow"></div>
     <div class="login-logo">💬</div>
@@ -849,36 +848,31 @@ currentWallpaper=savedWp;
 // === AUTH ===
 setPersistence(auth,browserLocalPersistence).catch(()=>{});
 
-// Splash timeout fallback - max 5 seconds
-let splashTimeout=setTimeout(()=>{
-  if(!document.getElementById('splash').classList.contains('off')){
-    show('login');
-  }
-},5000);
+// Langsung tampilkan login dulu, jangan tunggu Firebase
+show('login');
 
 onAuthStateChanged(auth,async user=>{
-  clearTimeout(splashTimeout);
   if(isAdmin)return;
   if(user){
-    // Tampilkan splash sebentar saja
-    show('splash');
-    // Set timeout fallback untuk fetch user data
-    const fetchTimeout=setTimeout(()=>{
-      show('login');
-    },6000);
+    // User sudah login - coba load data, tapi jangan stuck
     try{
-    const snap=await get(ref(db,`users/${user.uid}`));
-    clearTimeout(fetchTimeout);
-    if(snap.exists()){
-      const d=snap.val();
-      me={id:user.uid,name:d.name||user.displayName||'User',username:d.username||'',photo:d.photo||user.photoURL||'',email:user.email||'',bio:d.bio||''};
-      setupPresence();startHomeListeners();renderMyTopbar();show('home');
-    } else {
-      me={id:user.uid,name:user.displayName||'',photo:user.photoURL||'',email:user.email||''};
-      if(me.photo){const pp=document.getElementById('photoPreview');pp.innerHTML=`<img src="${me.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"><div class="overlay">✏️</div>`;}
-      show('login');document.getElementById('step0').style.display='none';document.getElementById('step1').classList.add('active');
+      const snap=await Promise.race([
+        get(ref(db,`users/${user.uid}`)),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),5000))
+      ]);
+      if(snap.exists()){
+        const d=snap.val();
+        me={id:user.uid,name:d.name||user.displayName||'User',username:d.username||'',photo:d.photo||user.photoURL||'',email:user.email||'',bio:d.bio||''};
+        setupPresence();startHomeListeners();renderMyTopbar();show('home');
+      } else {
+        me={id:user.uid,name:user.displayName||'',photo:user.photoURL||'',email:user.email||''};
+        if(me.photo){const pp=document.getElementById('photoPreview');pp.innerHTML=`<img src="${me.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"><div class="overlay">✏️</div>`;}
+        show('login');document.getElementById('step0').style.display='none';document.getElementById('step1').classList.add('active');
+      }
+    }catch(e){
+      // Timeout atau error - tetap di login
+      show('login');
     }
-    }catch(e){clearTimeout(fetchTimeout);show('login');}
   } else {
     show('login');document.getElementById('step0').style.display='block';document.getElementById('step1').classList.remove('active');
   }
