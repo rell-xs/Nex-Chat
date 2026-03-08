@@ -940,6 +940,8 @@ function startHomeListeners(){
     renderChatList();
   });
   homeUnsubs.push(u);
+  listenIncomingCall();
+  checkNotifPermission();
 }
 function stopHomeListeners(){homeUnsubs.forEach(u=>{try{u();}catch(e){}});homeUnsubs=[];}
 
@@ -1105,6 +1107,10 @@ window.openConv=(cid,name,photo,type,otherId)=>{
     });
     convUnsubs.push(pu);
   }
+  // Load pinned message
+  loadPinnedMsg(cid);
+  // Load disappearing setting
+  get(ref(db,`conversations/${cid}/disappearing`)).then(snap=>{disappTimeout=snap.exists()?snap.val():0;});
   loadMessages(cid,type);
   cancelReply();
   document.getElementById('msgTxt').focus();
@@ -1118,7 +1124,10 @@ function loadMessages(cid,type){
   const mq=query(ref(db,`messages/${cid}`),orderByChild('ts'),limitToLast(80));
   const u=onValue(mq,snap=>{
     const count=snap.size||0;
-    if(count>lastMsgCount&&lastMsgCount>0)playNotif();
+    if(count>lastMsgCount&&lastMsgCount>0){
+      playNotif();
+      if(snap.exists()){let last=null;snap.forEach(c=>{last=c.val();});if(last&&last.senderId!==me?.id)sendPushNotif('Pesan dari '+(last.senderName||''),last.text||'📷');}
+    }
     lastMsgCount=count;
     area.innerHTML='<div class="date-pill"><span>Hari ini</span></div>';
     if(snap.exists())snap.forEach(c=>renderBubble(c.val(),c.key,type));
@@ -1137,24 +1146,32 @@ function loadMessages(cid,type){
 function renderBubble(msg,msgId,type){
   const area=document.getElementById('msgsArea');
   const isOut=msg.senderId===me.id;
-  if(msg.deleted){
-    const row=document.createElement('div');
-    row.className='msg-row '+(isOut?'out':'in');
-    row.innerHTML=`<div class="bubble deleted">🚫 Pesan dihapus</div>`;
-    area.appendChild(row);return;
-  }
-  const emoOnly=/^[\p{Emoji}\s]{1,4}$/u.test(msg.text||'');
   const row=document.createElement('div');
   row.className='msg-row '+(isOut?'out':'in');
   row.dataset.msgId=msgId;
   let inner='';
+
+  if(msg.deleted){
+    row.innerHTML=`<div class="bubble deleted">🚫 Pesan dihapus</div>`;
+    area.appendChild(row);return;
+  }
+
   if(!isOut&&type==='group')inner+=`<div class="msg-sender-name">${esc(msg.senderName||'?')}</div>`;
   if(msg.replyTo)inner+=`<div class="reply-preview"><div class="rp-name">${esc(msg.replyTo.senderName||'?')}</div><div class="rp-txt">${esc(msg.replyTo.text||'')}</div></div>`;
-  if(msg.type==='image'){
+
+  if(msg.type==='voice'){
+    const dur=msg.duration||0;
+    const bars=Array.from({length:16},()=>`<div class="voice-bar" style="height:${Math.max(4,Math.floor(Math.random()*20))}px;"></div>`).join('');
+    inner+=`<div class="voice-bubble"><button class="voice-play" onclick="playVoice(this,'${esc(msg.voiceUrl||'')}',${dur})">▶</button><div class="voice-wave">${bars}</div><span class="voice-dur">${dur}s</span></div>`;
+  } else if(msg.type==='sticker'){
+    inner+=`<div class="bubble sticker-bubble">${esc(msg.text||'')}</div>`;
+  } else if(msg.type==='image'){
     inner+=`<div class="img-bubble" onclick="viewImg('${esc(msg.imageUrl||'')}')"><img src="${esc(msg.imageUrl||'')}" loading="lazy"></div>`;
   } else {
+    const emoOnly=/^[\p{Emoji}\s]{1,4}$/u.test(msg.text||'');
     inner+=`<div class="bubble${emoOnly?' big-emoji':''}">${esc(msg.text||'')}</div>`;
   }
+
   const reactions=msg.reactions||{};
   const rGroups={};
   Object.entries(reactions).forEach(([uid,e])=>{if(!rGroups[e])rGroups[e]=[];rGroups[e].push(uid);});
@@ -1163,7 +1180,8 @@ function renderBubble(msg,msgId,type){
   }
   inner+=`<div class="msg-meta">${fmtT(msg.ts)}${isOut?` <span class="tick">✓✓</span>`:''}</div>`;
   row.innerHTML=inner;
-  const bubble=row.querySelector('.bubble,.img-bubble');
+
+  const bubble=row.querySelector('.bubble,.img-bubble,.voice-bubble');
   if(bubble){
     bubble.addEventListener('contextmenu',e=>{e.preventDefault();openCtxMenu(e,msg,msgId,isOut);});
     bubble.addEventListener('touchstart',()=>{ctxLongTimer=setTimeout(()=>openCtxMenu(null,msg,msgId,isOut),600);},{passive:true});
@@ -1182,8 +1200,10 @@ window.sendMsg=()=>{
   if(!text||!me||!activeConv)return;
   const msgData={text,senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',type:'text',ts:serverTimestamp()};
   if(replyTo)msgData.replyTo={text:replyTo.text,senderName:replyTo.senderName,msgId:replyTo.id};
-  push(ref(db,`messages/${activeConv.id}`),msgData);
+  const newRef=push(ref(db,`messages/${activeConv.id}`),msgData);
   update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text,ts:serverTimestamp(),senderId:me.id},type:activeConv.type,members:activeConv.type==='private'?{[me.id]:true,[activeConv.otherId]:true}:undefined});
+  // Schedule disappear if needed
+  if(disappTimeout&&newRef.key)scheduleDisappear(newRef.key,activeConv.id,disappTimeout);
   inp.value='';inp.style.height='auto';
   cancelReply();
   document.getElementById('emojiShelf').classList.remove('open');
@@ -1788,137 +1808,22 @@ function sendPushNotif(title,body){
 }
 
 // === OFFLINE MODE ===
-window.addEventListener('online',()=>{document.getElementById('offlineBanner').classList.remove('show');toast('Kembali online ✓','ok');});
-window.addEventListener('offline',()=>{document.getElementById('offlineBanner').classList.add('show');toast('Kamu offline','err');});
-if(!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
-
-// === PATCH: extend openConv to load pinned + disappearing ===
-const _origOpenConv=window.openConv;
-window.openConv=(cid,name,photo,type,otherId)=>{
-  _origOpenConv(cid,name,photo,type,otherId);
-  loadPinnedMsg(cid);
-  // Load disappearing setting
-  get(ref(db,`conversations/${cid}/disappearing`)).then(snap=>{disappTimeout=snap.exists()?snap.val():0;});
-};
-
-// === PATCH: extend sendMsg to support disappearing ===
-const _origSendMsg=window.sendMsg;
-window.sendMsg=()=>{
-  _origSendMsg();
-  // Schedule disappear if needed
-  if(disappTimeout&&activeConv){
-    const mq2=query(ref(db,`messages/${activeConv.id}`),orderByChild('ts'));
-    get(mq2).then(snap=>{
-      if(!snap.exists())return;
-      let lastKey=null;
-      snap.forEach(c=>{lastKey=c.key;});
-      if(lastKey)scheduleDisappear(lastKey,activeConv.id,disappTimeout);
-    });
-  }
-};
-
-// === PATCH: extend ctx menu to add pin option ===
-const origOpenCtx=window.openCtxMenu||function(){};
-// Add pin/unpin to ctx menu items via DOM
-const ctxMenu=document.getElementById('ctxMenu');
-const pinItem=document.createElement('div');
-pinItem.className='ctx-item';pinItem.id='ctxPinBtn';pinItem.innerHTML='📌 Pin pesan';
-pinItem.onclick=()=>ctxPin();
-ctxMenu.insertBefore(pinItem,document.getElementById('ctxDeleteBtn'));
-
-// === PATCH: extend renderBubble for voice + sticker ===
-const _origRenderBubble=window.renderBubble||function(){};
-// Override is handled inside loadMessages via type check
-
-// Patch loadMessages to handle voice + sticker types in renderBubble
-const _origLoadMsgs=window.loadMessages||null;
-
-// Extend the onValue handler for messages to handle new types
-// We patch renderBubble directly by checking msg.type in it
-// The current renderBubble already handles 'image' and 'text'
-// We need to patch it for 'voice' and 'sticker'
-// Since it's defined as a named function, we patch loadMessages re-rendering
+// online/offline handled below
 
 // === INIT NEW FEATURES ===
-// Extend startHomeListeners
-const _origStartHome=window.startHomeListeners||function(){};
-const origStartHomeListeners=startHomeListeners;
-function startHomeListeners(){
-  origStartHomeListeners();
-  listenIncomingCall();
-  checkNotifPermission();
-}
+window.addEventListener('online',()=>{const b=document.getElementById('offlineBanner');if(b)b.classList.remove('show');toast('Kembali online ✓','ok');});
+window.addEventListener('offline',()=>{const b=document.getElementById('offlineBanner');if(b)b.classList.add('show');toast('Kamu offline','err');});
+if(!navigator.onLine){const b=document.getElementById('offlineBanner');if(b)b.classList.add('show');}
 
-// Patch renderBubble to support voice + sticker
-const _oldRB=renderBubble;
-function renderBubble(msg,msgId,type){
-  if(msg.type==='voice'){
-    const area=document.getElementById('msgsArea');
-    const isOut=msg.senderId===me.id;
-    const row=document.createElement('div');
-    row.className='msg-row '+(isOut?'out':'in');
-    row.dataset.msgId=msgId;
-    let inner='';
-    if(!isOut&&type==='group')inner+=`<div class="msg-sender-name">${esc(msg.senderName||'?')}</div>`;
-    inner+=renderVoiceBubble(msg);
-    inner+=`<div class="msg-meta">${fmtT(msg.ts)}${isOut?` <span class="tick">✓✓</span>`:''}</div>`;
-    row.innerHTML=inner;
-    const vb=row.querySelector('.voice-bubble');
-    if(vb){
-      vb.addEventListener('contextmenu',e=>{e.preventDefault();openCtxMenu(e,msg,msgId,isOut);});
-      vb.addEventListener('touchstart',()=>{ctxLongTimer=setTimeout(()=>openCtxMenu(null,msg,msgId,isOut),600);},{passive:true});
-      vb.addEventListener('touchend',()=>clearTimeout(ctxLongTimer));
-    }
-    area.appendChild(row);
-    return;
-  }
-  if(msg.type==='sticker'){
-    const area=document.getElementById('msgsArea');
-    const isOut=msg.senderId===me.id;
-    const row=document.createElement('div');
-    row.className='msg-row '+(isOut?'out':'in');
-    row.dataset.msgId=msgId;
-    row.innerHTML=`<div class="bubble sticker-bubble">${esc(msg.text||'')}</div><div class="msg-meta">${fmtT(msg.ts)}</div>`;
-    area.appendChild(row);
-    return;
-  }
-  _oldRB(msg,msgId,type);
-}
-
-// Also patch sendPushNotif into message loading
-const _oldLoadMsgs2=loadMessages;
-function loadMessages(cid,type){
-  stopConvListeners();
-  const area=document.getElementById('msgsArea');
-  area.innerHTML='<div class="date-pill"><span>Hari ini</span></div>';
-  const mq=query(ref(db,`messages/${cid}`),orderByChild('ts'),limitToLast(80));
-  let firstLoad=true;
-  const u=onValue(mq,snap=>{
-    const count=snap.size||0;
-    if(count>lastMsgCount&&lastMsgCount>0){
-      playNotif();
-      // Push notification
-      if(activeConv&&snap.exists()){
-        let last=null;snap.forEach(c=>{last=c.val();});
-        if(last&&last.senderId!==me.id){
-          sendPushNotif('Pesan dari '+last.senderName,last.text||'📷 Foto');
-        }
-      }
-    }
-    lastMsgCount=count;
-    area.innerHTML='<div class="date-pill"><span>Hari ini</span></div>';
-    if(snap.exists())snap.forEach(c=>renderBubble(c.val(),c.key,type));
-    area.scrollTop=area.scrollHeight;
-    firstLoad=false;
-  });
-  convUnsubs.push(u);
-  if(activeConv?.otherId){
-    const tu=onValue(ref(db,`typing/${activeConv.otherId}~~${me.id}`),s=>{
-      document.getElementById('typingRow').classList.toggle('show',s.exists());
-      if(s.exists())document.getElementById('msgsArea').scrollTop=99999;
-    });
-    convUnsubs.push(tu);
-  }
+// Add pin item to ctx menu
+const ctxMenuEl=document.getElementById('ctxMenu');
+if(ctxMenuEl&&!document.getElementById('ctxPinBtn')){
+  const pinItem=document.createElement('div');
+  pinItem.className='ctx-item';pinItem.id='ctxPinBtn';
+  pinItem.innerHTML='📌 Pin pesan';
+  pinItem.onclick=()=>ctxPin();
+  const delBtn=document.getElementById('ctxDeleteBtn');
+  if(delBtn)ctxMenuEl.insertBefore(pinItem,delBtn);
 }
 </script>
 </body>
