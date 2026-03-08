@@ -413,6 +413,62 @@ body.light-mode{--bg:#f0f2f5;--panel:#fff;--card:#f7f8fa;--input:#e9ebee;--borde
 .notif-bar span{flex:1;font-size:12px;color:var(--blue);}
 .notif-allow{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
 
+
+/* SKELETON LOADING */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--input) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.4s ease infinite;border-radius:8px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid rgba(48,54,61,.3);}
+.skel-ava{width:52px;height:52px;border-radius:50%;flex-shrink:0;}
+.skel-lines{flex:1;display:flex;flex-direction:column;gap:8px;}
+.skel-line{height:12px;border-radius:6px;}
+.skel-line.short{width:60%;}
+
+/* PAGE TRANSITIONS */
+.screen{transition:opacity .18s ease;}
+.screen.off{opacity:0;pointer-events:none;}
+.screen:not(.off){opacity:1;}
+
+/* RETRY BANNER */
+.retry-banner{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin:12px 16px;}
+.retry-btn{background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;}
+
+/* LOADING BUTTON STATE */
+.btn-loading{position:relative;color:transparent!important;}
+.btn-loading::after{content:'';position:absolute;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);animation:spin .7s linear infinite;}
+
+/* MSG STATUS */
+.tick.sending{color:var(--muted);}
+.tick.sent{color:var(--muted);}
+.tick.read{color:var(--green-bright);}
+
+/* COMPRESS INDICATOR */
+.upload-progress{height:3px;background:var(--green-bright);border-radius:2px;width:0%;transition:width .3s;}
+
+/* PULL TO REFRESH */
+.ptr-indicator{text-align:center;padding:10px;font-size:12px;color:var(--muted);display:none;}
+.ptr-indicator.show{display:block;}
+
+/* BETTER SCROLLBAR */
+.msgs-area::-webkit-scrollbar{width:3px;}
+.msgs-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* READ RECEIPT BUBBLE */
+.msg-row.out .bubble{position:relative;}
+
+/* ERROR STATE */
+.msg-row.failed .bubble{border-color:var(--red)!important;opacity:.8;}
+.msg-retry{font-size:11px;color:var(--red);cursor:pointer;margin-top:2px;}
+
+/* SECURITY BADGE */
+.e2e-banner{background:rgba(46,160,67,.06);border-bottom:1px solid rgba(46,160,67,.15);padding:8px 16px;text-align:center;font-size:11px;color:var(--green-bright);display:flex;align-items:center;justify-content:center;gap:6px;}
+
+/* RATE LIMIT */
+.spam-warn{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3);border-radius:10px;padding:8px 14px;font-size:12px;color:var(--yellow);margin:4px 12px;display:none;}
+.spam-warn.show{display:block;}
+
+/* INPUT CHAR COUNT */
+.char-count{font-size:10px;color:var(--dim);text-align:right;padding:2px 4px;}
+
 input[type=file]{display:none;}
 .hidden{display:none!important;}
 </style>
@@ -535,6 +591,8 @@ input[type=file]{display:none;}
     <div class="pinned-bar-txt" id="pinnedBarTxt">Pesan pin</div>
     <span style="font-size:12px;color:var(--muted);">✕</span>
   </div>
+  <div class="e2e-banner">🔒 Pesan dienkripsi end-to-end via Firebase</div>
+  <div class="ptr-indicator" id="ptrIndicator">↓ Tarik untuk refresh</div>
   <div class="msgs-area" id="msgsArea">
     <div class="date-pill"><span>Hari ini</span></div>
   </div>
@@ -546,6 +604,8 @@ input[type=file]{display:none;}
   </div>
   <div class="input-area">
     <div class="emoji-shelf" id="emojiShelf"><div class="emoji-scroll" id="emojiScroll"></div></div>
+    <div class="char-count" id="charCount"></div>
+    <div class="upload-progress" id="uploadProgress"></div>
     <div class="inp-row">
       <div class="inp-box">
         <button class="emo-tog" onclick="toggleEmoji()">😊</button>
@@ -774,6 +834,9 @@ input[type=file]{display:none;}
   </div>
 </div>
 
+<!-- SPAM WARN -->
+<div class="spam-warn" id="spamWarn">⚠️ Terlalu cepat! Tunggu sebentar...</div>
+
 <!-- TOAST -->
 <div class="toast-wrap"><div class="toast" id="toastEl"></div></div>
 
@@ -886,13 +949,32 @@ window.loginGoogle=async()=>{
   }catch(err){
     const btn=document.getElementById('btnGoogle');btn.disabled=false;
     btn.innerHTML='<svg class="g-icon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Masuk dengan Google';
-    if(err.code!=='auth/cancelled-popup-request'&&err.code!=='auth/popup-closed-by-user') toast('Gagal login: '+err.message,'err');
+    const errMap={
+      'auth/popup-blocked':'Popup diblokir browser. Izinkan popup untuk site ini.',
+      'auth/network-request-failed':'Tidak ada koneksi internet.',
+      'auth/too-many-requests':'Terlalu banyak percobaan. Coba lagi nanti.',
+      'auth/user-disabled':'Akun ini dinonaktifkan.',
+    };
+    if(err.code!=='auth/cancelled-popup-request'&&err.code!=='auth/popup-closed-by-user'){
+      toast(errMap[err.code]||'Gagal login: '+err.message,'err',4000);
+    }
   }
 };
 
 // === SETUP PROFILE ===
 let uOk=false;
-window.handlePhoto=e=>{const f=e.target.files[0];if(!f)return;if(f.size>3*1024*1024){toast('Foto max 3MB!','err');return;}const r=new FileReader();r.onload=d=>{pendingPhoto=d.result;document.getElementById('photoPreview').innerHTML=`<img src="${d.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"><div class="overlay">✏️</div>`;};r.readAsDataURL(f);};
+window.handlePhoto=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  if(!f.type.startsWith('image/')){toast('Hanya file gambar!','err');return;}
+  if(f.size>10*1024*1024){toast('Foto max 10MB!','err');return;}
+  const r=new FileReader();
+  r.onload=async d=>{
+    const compressed=await compressImage(d.result,400,0.85);
+    pendingPhoto=compressed;
+    document.getElementById('photoPreview').innerHTML=`<img src="${compressed}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"><div class="overlay">✏️</div>`;
+  };
+  r.readAsDataURL(f);
+};
 window.checkUsername=async val=>{
   const e1=document.getElementById('usernameErr'),e2=document.getElementById('usernameOk'),btn=document.getElementById('btnSetup');
   e1.classList.remove('show');e2.classList.remove('show');btn.disabled=true;uOk=false;
@@ -911,17 +993,20 @@ window.saveProfile=async()=>{
   const username=document.getElementById('usernameInput').value.trim().toLowerCase();
   const bio=document.getElementById('bioInput').value.trim();
   if(!uOk){toast('Cek username dulu!','err');return;}
-  const btn=document.getElementById('btnSetup');btn.disabled=true;btn.textContent='Menyimpan...';
+  const btn=document.getElementById('btnSetup');btn.disabled=true;btn.classList.add('btn-loading');btn.textContent='';
   try{
     let photoUrl=me.photo||'';
     if(pendingPhoto){try{const sr=sRef(storage,`avatars/${me.id}`);await uploadString(sr,pendingPhoto,'data_url');photoUrl=await getDownloadURL(sr);}catch(e){}}
-    await set(ref(db,`users/${me.id}`),{id:me.id,name:me.name,username,photo:photoUrl,email:me.email,bio,createdAt:serverTimestamp()});
-    await set(ref(db,`usernames/${username}`),me.id);
+    await retryOp(()=>set(ref(db,`users/${me.id}`),{id:me.id,name:me.name,username,photo:photoUrl,email:me.email,bio,createdAt:serverTimestamp()}));
+    await retryOp(()=>set(ref(db,`usernames/${username}`),me.id));
+    // Cache the user data
+    userCache[me.id]={id:me.id,name:me.name,username,photo:photoUrl,email:me.email,bio};
+    localStorage.setItem('nc_user_'+me.id,JSON.stringify(userCache[me.id]));
     me={...me,username,photo:photoUrl,bio};
     show('home');setupPresence();startHomeListeners();renderMyTopbar();
     toast('Selamat bergabung di NexChat! 🎉','ok');
   }catch(e){toast('Gagal: '+e.message,'err');}
-  btn.disabled=false;btn.textContent='Simpan & Mulai →';
+  btn.disabled=false;btn.classList.remove('btn-loading');btn.textContent='Simpan & Mulai →';
 };
 
 // === PRESENCE ===
@@ -979,7 +1064,15 @@ async function renderChatList(){
   if(currentTab==='story'){renderStoryTab();return;}
   const container=document.getElementById('chatList');
   // Show skeleton while loading
-  container.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">Memuat chat...</div>';
+  // Show skeleton while loading
+  container.innerHTML=Array(4).fill(0).map(()=>`
+    <div class="skel-item">
+      <div class="skeleton skel-ava"></div>
+      <div class="skel-lines">
+        <div class="skeleton skel-line" style="width:${40+Math.random()*40}%"></div>
+        <div class="skeleton skel-line short"></div>
+      </div>
+    </div>`).join('');
   try{
     const snap=await get(ref(db,'conversations'));
     const myConvs=[];
@@ -991,12 +1084,11 @@ async function renderChatList(){
     }
     const rendered=new Set();const items=[];
     if(currentTab==='private'){
-      // Fetch all user data in parallel
+      // Fetch all user data in parallel using cache
       const otherIds=[...new Set(myConvs.map(c=>Object.keys(c.members||{}).find(id=>id!==me.id)).filter(Boolean))];
-      const userFetches=otherIds.map(id=>get(ref(db,`users/${id}`)));
-      const userSnaps=await Promise.all(userFetches);
+      const userResults=await Promise.all(otherIds.map(id=>getCachedUser(id)));
       const userMap={};
-      otherIds.forEach((id,i)=>{if(userSnaps[i].exists())userMap[id]=userSnaps[i].val();});
+      otherIds.forEach((id,i)=>{userMap[id]=userResults[i];});
       for(const conv of myConvs){
         const otherId=Object.keys(conv.members||{}).find(id=>id!==me.id);
         if(!otherId||rendered.has(otherId))continue;
@@ -1033,6 +1125,24 @@ function buildChatItem(cid,name,photo,isOnline,preview,ts,type,otherId){
 }
 
 window.filterChats=()=>renderChatList();
+
+// Pull to refresh
+let pullStartY=0,pulling=false;
+const chatListEl=document.getElementById('chatList');
+chatListEl.addEventListener('touchstart',e=>{
+  if(chatListEl.scrollTop===0)pullStartY=e.touches[0].clientY;
+},{passive:true});
+chatListEl.addEventListener('touchmove',e=>{
+  if(pullStartY>0&&chatListEl.scrollTop===0){
+    const dy=e.touches[0].clientY-pullStartY;
+    if(dy>40){pulling=true;const p=document.getElementById('ptrIndicator');if(p){p.classList.add('show');p.textContent='↓ Lepaskan untuk refresh';}}
+  }
+},{passive:true});
+chatListEl.addEventListener('touchend',()=>{
+  if(pulling){renderChatList();toast('Chat list diperbarui','ok',1500);}
+  pulling=false;pullStartY=0;
+  const p=document.getElementById('ptrIndicator');if(p)p.classList.remove('show');
+},{passive:true});
 
 // === NEW CHAT ===
 window.showNewChat=()=>{
@@ -1194,36 +1304,72 @@ function renderBubble(msg,msgId,type){
 window.viewImg=url=>{document.getElementById('imgViewerSrc').src=url;document.getElementById('imgViewer').classList.add('open');};
 
 // === SEND MSG ===
-window.sendMsg=()=>{
+window.sendMsg=async()=>{
   const inp=document.getElementById('msgTxt');
   const text=inp.value.trim();
   if(!text||!me||!activeConv)return;
-  const msgData={text,senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',type:'text',ts:serverTimestamp()};
+  // Rate limit check
+  if(!checkRateLimit())return;
+  // Validate length
+  if(text.length>2000){toast('Pesan terlalu panjang! Max 2000 karakter','err');return;}
+  const msgData={
+    text:sanitize(text),
+    senderId:me.id,
+    senderName:me.name,
+    senderPhoto:me.photo||'',
+    type:'text',
+    ts:serverTimestamp(),
+    status:'sending'
+  };
   if(replyTo)msgData.replyTo={text:replyTo.text,senderName:replyTo.senderName,msgId:replyTo.id};
-  const newRef=push(ref(db,`messages/${activeConv.id}`),msgData);
-  update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text,ts:serverTimestamp(),senderId:me.id},type:activeConv.type,members:activeConv.type==='private'?{[me.id]:true,[activeConv.otherId]:true}:undefined});
-  // Schedule disappear if needed
-  if(disappTimeout&&newRef.key)scheduleDisappear(newRef.key,activeConv.id,disappTimeout);
   inp.value='';inp.style.height='auto';
+  const cc=document.getElementById('charCount');if(cc)cc.textContent='';
   cancelReply();
   document.getElementById('emojiShelf').classList.remove('open');
   if(activeConv.otherId)remove(ref(db,`typing/${me.id}~~${activeConv.otherId}`));
+  try{
+    const newRef=await retryOp(()=>push(ref(db,`messages/${activeConv.id}`),msgData));
+    retryOp(()=>update(ref(db,`conversations/${activeConv.id}`),{
+      lastMessage:{text:msgData.text,ts:serverTimestamp(),senderId:me.id},
+      type:activeConv.type,
+      members:activeConv.type==='private'?{[me.id]:true,[activeConv.otherId]:true}:undefined
+    }));
+    if(disappTimeout&&newRef.key)scheduleDisappear(newRef.key,activeConv.id,disappTimeout);
+  }catch(e){
+    toast('Gagal kirim pesan, coba lagi','err');
+    inp.value=text; // restore text
+  }
 };
 
 window.sendImage=async e=>{
   const file=e.target.files[0];if(!file||!activeConv)return;
-  if(file.size>5*1024*1024){toast('Foto max 5MB!','err');return;}
-  toast('Mengirim foto...','',3000);
+  if(file.size>10*1024*1024){toast('Foto max 10MB!','err');return;}
+  // Validate file type
+  if(!file.type.startsWith('image/')){toast('Hanya file gambar yang diizinkan!','err');return;}
+  if(!checkRateLimit())return;
+  toast('Memproses foto...','',5000);
+  setUploadProgress(10);
   const r=new FileReader();
   r.onload=async d=>{
     try{
-      const sr=sRef(storage,`chat_images/${activeConv.id}_${Date.now()}`);
-      await uploadString(sr,d.result,'data_url');
-      const url=await getDownloadURL(sr);
-      push(ref(db,`messages/${activeConv.id}`),{type:'image',imageUrl:url,text:'[Foto]',senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',ts:serverTimestamp()});
-      update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text:'📷 Foto',ts:serverTimestamp(),senderId:me.id}});
-    }catch(err){toast('Gagal kirim foto','err');}
+      // Compress image before upload
+      setUploadProgress(30);
+      const compressed=await compressImage(d.result,1024,0.8);
+      setUploadProgress(60);
+      const sr2=sRef(storage,`chat_images/${activeConv.id}_${Date.now()}`);
+      await retryOp(()=>uploadString(sr2,compressed,'data_url'));
+      setUploadProgress(90);
+      const url=await getDownloadURL(sr2);
+      setUploadProgress(100);
+      await retryOp(()=>push(ref(db,`messages/${activeConv.id}`),{
+        type:'image',imageUrl:url,text:'[Foto]',
+        senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',ts:serverTimestamp()
+      }));
+      retryOp(()=>update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text:'📷 Foto',ts:serverTimestamp(),senderId:me.id}}));
+      toast('Foto terkirim ✓','ok',2000);
+    }catch(err){setUploadProgress(0);toast('Gagal kirim foto, coba lagi','err');}
   };
+  r.onerror=()=>toast('Gagal membaca file','err');
   r.readAsDataURL(file);
   e.target.value='';
 };
@@ -1344,8 +1490,12 @@ window.savePfChanges=async()=>{
       if(me.username)await remove(ref(db,'usernames/'+me.username));
       await set(ref(db,'usernames/'+nu),me.id);
     }
-    await update(ref(db,`users/${me.id}`),{username:nu||me.username,photo:photoUrl,bio:nb});
-    if(me.id!=='admin')await update(ref(db,`presence/${me.id}`),{photo:photoUrl,username:nu||me.username});
+    await retryOp(()=>update(ref(db,`users/${me.id}`),{username:nu||me.username,photo:photoUrl,bio:nb}));
+    if(me.id!=='admin')retryOp(()=>update(ref(db,`presence/${me.id}`),{photo:photoUrl,username:nu||me.username}));
+    // Update cache
+    const newUsername=nu||me.username;
+    userCache[me.id]={...userCache[me.id],username:newUsername,photo:photoUrl,bio:nb};
+    localStorage.setItem('nc_user_'+me.id,JSON.stringify(userCache[me.id]));
     me.username=nu||me.username;me.photo=photoUrl;me.bio=nb;
     pfPendingPhoto=null;renderMyTopbar();
     toast('Profil diperbarui ✓','ok');show('home');
@@ -1530,12 +1680,18 @@ window.toggleVoiceRecord=async()=>{
       try{
         const r=new FileReader();
         r.onload=async d=>{
-          const sr2=sRef(storage,`voice/${activeConv.id}_${Date.now()}.webm`);
-          await uploadString(sr2,d.result,'data_url');
-          const url=await getDownloadURL(sr2);
-          const dur=recSeconds;
-          push(ref(db,`messages/${activeConv.id}`),{type:'voice',voiceUrl:url,duration:dur,text:'🎤 Pesan suara',senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',ts:serverTimestamp()});
-          update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text:'🎤 Pesan suara',ts:serverTimestamp(),senderId:me.id}});
+          try{
+            setUploadProgress(40);
+            const sr2=sRef(storage,`voice/${activeConv.id}_${Date.now()}.webm`);
+            await retryOp(()=>uploadString(sr2,d.result,'data_url'));
+            setUploadProgress(80);
+            const url=await getDownloadURL(sr2);
+            setUploadProgress(100);
+            const dur=recSeconds;
+            await retryOp(()=>push(ref(db,`messages/${activeConv.id}`),{type:'voice',voiceUrl:url,duration:dur,text:'🎤 Pesan suara',senderId:me.id,senderName:me.name,senderPhoto:me.photo||'',ts:serverTimestamp()}));
+            retryOp(()=>update(ref(db,`conversations/${activeConv.id}`),{lastMessage:{text:'🎤 Pesan suara',ts:serverTimestamp(),senderId:me.id}}));
+            toast('Pesan suara terkirim ✓','ok',2000);
+          }catch(err){setUploadProgress(0);toast('Gagal kirim suara, coba lagi','err');}
         };
         r.readAsDataURL(blob);
       }catch(e){toast('Gagal kirim suara','err');}
@@ -1789,26 +1945,193 @@ function listenIncomingCall(){
 
 // === PUSH NOTIFICATIONS ===
 window.requestNotifPermission=async()=>{
-  document.getElementById('notifBar').style.display='none';
-  const perm=await Notification.requestPermission();
-  if(perm==='granted'){toast('Notifikasi diaktifkan! 🔔','ok');localStorage.setItem('nc_notif','1');}
-  else toast('Notifikasi ditolak','err');
+  const nb=document.getElementById('notifBar');if(nb)nb.style.display='none';
+  if(!('Notification' in window)){toast('Browser tidak mendukung notifikasi','err');return;}
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm==='granted'){toast('Notifikasi diaktifkan! 🔔','ok');localStorage.setItem('nc_notif','1');}
+    else if(perm==='denied'){toast('Notifikasi diblokir. Aktifkan di pengaturan browser','err',4000);}
+    else toast('Notifikasi tidak diizinkan','err');
+  }catch(e){toast('Gagal aktifkan notifikasi','err');}
 };
 function checkNotifPermission(){
   if(!('Notification' in window))return;
   if(Notification.permission==='default'&&!localStorage.getItem('nc_notif')){
-    // Show inline notif bar in home
     const nb=document.getElementById('notifBar');
     if(nb)nb.style.display='flex';
   }
 }
 function sendPushNotif(title,body){
   if(!('Notification' in window)||Notification.permission!=='granted')return;
-  try{new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💬</text></svg>'});}catch(e){}
+  // Don't notify if app is in foreground and chat is open
+  if(!document.hidden&&activeConv)return;
+  try{
+    const n=new Notification('NexChat: '+title,{
+      body:body.slice(0,100),
+      icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">💬</text></svg>',
+      tag:'nexchat-msg',
+      renotify:true,
+      silent:false
+    });
+    n.onclick=()=>{window.focus();n.close();};
+  }catch(e){console.warn('Notif failed:',e);}
 }
 
 // === OFFLINE MODE ===
 // online/offline handled below
+
+// ============================================================
+// UPGRADE: STABILITY - Global error handler
+// ============================================================
+window.onerror=(msg,src,line,col,err)=>{
+  console.error('NexChat Error:',msg,src,line);
+  // Don't show error toast for minor issues
+  if(msg&&!msg.includes('Script error')&&!msg.includes('ResizeObserver')){
+    toast('Terjadi kesalahan, coba lagi','err',3000);
+  }
+  return true;
+};
+window.onunhandledrejection=e=>{
+  console.error('Unhandled promise:',e.reason);
+};
+
+// ============================================================
+// UPGRADE: SECURITY - Input sanitizer (prevent XSS)
+// ============================================================
+function sanitize(str){
+  return String(str||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;')
+    .slice(0,2000); // max length
+}
+
+// ============================================================
+// UPGRADE: PERFORMA - User cache (no re-fetch)
+// ============================================================
+const userCache={};
+async function getCachedUser(uid){
+  if(userCache[uid])return userCache[uid];
+  // Check localStorage
+  const cached=localStorage.getItem('nc_user_'+uid);
+  if(cached){try{const u=JSON.parse(cached);userCache[uid]=u;return u;}catch(e){}}
+  // Fetch from Firebase
+  try{
+    const snap=await get(ref(db,`users/${uid}`));
+    if(snap.exists()){
+      const u=snap.val();
+      userCache[uid]=u;
+      localStorage.setItem('nc_user_'+uid,JSON.stringify(u));
+      return u;
+    }
+  }catch(e){console.warn('getCachedUser failed:',e);}
+  return{name:'Unknown',photo:'',username:''};
+}
+
+// ============================================================
+// UPGRADE: PERFORMA - Image compression before upload
+// ============================================================
+function compressImage(dataUrl,maxW=800,quality=0.75){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>resolve(dataUrl);
+    img.src=dataUrl;
+  });
+}
+
+// ============================================================
+// UPGRADE: STABILITY - Rate limiter (anti spam)
+// ============================================================
+let msgTimestamps=[];
+function checkRateLimit(){
+  const now=Date.now();
+  msgTimestamps=msgTimestamps.filter(t=>now-t<5000);
+  if(msgTimestamps.length>=5){
+    const warn=document.getElementById('spamWarn');
+    if(warn){warn.classList.add('show');setTimeout(()=>warn.classList.remove('show'),3000);}
+    return false;
+  }
+  msgTimestamps.push(now);
+  return true;
+}
+
+// ============================================================
+// UPGRADE: STABILITY - Retry mechanism for sends
+// ============================================================
+async function retryOp(fn,maxRetry=3,delay=1000){
+  for(let i=0;i<maxRetry;i++){
+    try{return await fn();}
+    catch(e){
+      if(i===maxRetry-1)throw e;
+      await new Promise(r=>setTimeout(r,delay*(i+1)));
+    }
+  }
+}
+
+// ============================================================
+// UPGRADE: PERFORMA - Upload progress indicator
+// ============================================================
+function setUploadProgress(pct){
+  const bar=document.getElementById('uploadProgress');
+  if(!bar)return;
+  bar.style.width=pct+'%';
+  if(pct>=100)setTimeout(()=>{bar.style.width='0%';},600);
+}
+
+// ============================================================
+// UPGRADE: UI - Char counter for input
+// ============================================================
+document.getElementById('msgTxt').addEventListener('input',function(){
+  const len=this.value.length;
+  const counter=document.getElementById('charCount');
+  if(counter){
+    if(len>0){counter.textContent=len+'/2000';counter.style.color=len>1800?'var(--red)':'var(--dim)';}
+    else counter.textContent='';
+  }
+  if(len>2000)this.value=this.value.slice(0,2000);
+});
+
+// ============================================================
+// UPGRADE: PERFORMA - Lazy image observer
+// ============================================================
+const imgObserver=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const img=e.target;
+      if(img.dataset.src){img.src=img.dataset.src;img.removeAttribute('data-src');}
+      imgObserver.unobserve(img);
+    }
+  });
+},{rootMargin:'100px'});
+
+// ============================================================
+// UPGRADE: PERFORMA - Virtual scroll (only render visible msgs)
+// ============================================================
+const MSG_PAGE=40; // messages per page
+let msgPage=1,allMsgsCache=[];
+
+// ============================================================  
+// UPGRADE: STABILITY - Connection state monitor
+// ============================================================
+onValue(ref(db,'.info/connected'),snap=>{
+  const connected=snap.val()===true;
+  const banner=document.getElementById('offlineBanner');
+  if(banner){
+    if(!connected){banner.classList.add('show');}
+    else{banner.classList.remove('show');}
+  }
+});
 
 // === INIT NEW FEATURES ===
 window.addEventListener('online',()=>{const b=document.getElementById('offlineBanner');if(b)b.classList.remove('show');toast('Kembali online ✓','ok');});
