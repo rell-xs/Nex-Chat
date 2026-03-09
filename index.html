@@ -2151,13 +2151,17 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// Bridge: expose module functions untuk onclick di HTML
-// Ini diperlukan karena type="module" punya scope terisolasi di beberapa browser
-function loginGoogle(){ if(window._loginGoogle) window._loginGoogle(); else alert('Memuat...'); }
-function adminLogin(){ if(window._adminLogin) window._adminLogin(); else alert('Memuat...'); }
-function saveProfile(){ if(window._saveProfile) window._saveProfile(); }
-function checkUsername(v){ if(window._checkUsername) window._checkUsername(v); }
-function handlePhoto(e){ if(window._handlePhoto) window._handlePhoto(e); }
+// Bridge: tunggu module ready lalu jalankan
+function _callWhenReady(fn, args, attempt){
+  attempt = attempt||0;
+  if(window['_'+fn]){ window['_'+fn].apply(null,args); }
+  else if(attempt<30){ setTimeout(function(){ _callWhenReady(fn,args,attempt+1); },100); }
+}
+function loginGoogle(){ _callWhenReady('loginGoogle',[]); }
+function adminLogin(){ _callWhenReady('adminLogin',[]); }
+function saveProfile(){ _callWhenReady('saveProfile',[]); }
+function checkUsername(v){ _callWhenReady('checkUsername',[v]); }
+function handlePhoto(e){ _callWhenReady('handlePhoto',[e]); }
 </script>
 </body>
 </html>
